@@ -30,7 +30,7 @@ const nodeTypes = {
 const initialNodes: Node[] = [
     { id: '1', type: 'influencerNode', position: { x: 50, y: 150 }, data: {} },
     { id: '3', type: 'comfyNode', position: { x: 450, y: 150 }, data: { workflow: 'flux-9b-txt2img' } },
-    { id: '4', type: 'n8nNode', position: { x: 850, y: 150 }, data: { url: 'http://localhost:5678/webhook/your-id' } },
+    { id: '4', type: 'n8nNode', position: { x: 850, y: 150 }, data: { url: process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/your-id' } },
 ];
 
 const initialEdges: Edge[] = [
@@ -67,7 +67,7 @@ export default function WorkflowCanvas() {
             const payload = {
                 nodes,
                 edges,
-                comfyUrl: 'http://127.0.0.1:8188'
+                comfyUrl: process.env.NEXT_PUBLIC_COMFYUI_URL || 'http://127.0.0.1:8188'
             };
 
             const res = await fetch('/api/workflow/execute', {

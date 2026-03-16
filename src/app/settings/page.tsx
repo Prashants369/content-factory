@@ -89,7 +89,7 @@ const GROUPS: CredGroup[] = [
             },
             {
                 key: 'AGENT_ENGINE_URL', label: 'Python Agent Engine URL',
-                placeholder: 'http://localhost:8787',
+                placeholder: process.env.NEXT_PUBLIC_AGENT_ENGINE_URL || 'http://localhost:8787',
                 hint: 'The FastAPI server URL for the Python agent engine. Default: http://localhost:8787',
                 testFn: (url) => testLocalUrl(url, '/health'),
             },
@@ -101,7 +101,7 @@ const GROUPS: CredGroup[] = [
         creds: [
             {
                 key: 'COMFYUI_URL', label: 'ComfyUI URL',
-                placeholder: 'http://127.0.0.1:8188',
+                placeholder: process.env.NEXT_PUBLIC_COMFYUI_URL || 'http://127.0.0.1:8188',
                 testFn: (url) => testLocalUrl(url, '/system_stats'),
             },
             {
@@ -116,7 +116,7 @@ const GROUPS: CredGroup[] = [
             },
             {
                 key: 'N8N_WEBHOOK_URL', label: 'n8n Base URL',
-                placeholder: 'http://localhost:5678',
+                placeholder: process.env.NEXT_PUBLIC_N8N_URL || 'http://localhost:5678',
                 testFn: (url) => testLocalUrl(url, '/healthz'),
             },
             {
@@ -126,7 +126,7 @@ const GROUPS: CredGroup[] = [
             },
             {
                 key: 'OLLAMA_URL', label: 'Ollama URL',
-                placeholder: 'http://127.0.0.1:11434',
+                placeholder: process.env.NEXT_PUBLIC_OLLAMA_URL || 'http://127.0.0.1:11434',
                 testFn: (url) => testLocalUrl(url, '/api/tags'),
             },
         ],

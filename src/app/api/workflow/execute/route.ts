@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
-const OLLAMA_URL = 'http://127.0.0.1:11434/api/generate';
+const OLLAMA_URL = (process.env.OLLAMA_URL || 'http://127.0.0.1:11434') + '/api/generate';
 
 // Topological sort to determine execution order
 function orderNodes(nodes: any[], edges: any[]) {
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'nodes and edges arrays are required' }, { status: 400 });
     }
 
-    const { nodes, edges, comfyUrl = 'http://127.0.0.1:8188' } = body;
+    const { nodes, edges, comfyUrl = process.env.COMFYUI_URL || 'http://127.0.0.1:8188' } = body;
 
     // 1. Sort nodes topologically
     const executionOrder = orderNodes(nodes, edges);

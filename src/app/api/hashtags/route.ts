@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 const AGENT_ENGINE_URL = process.env.NEXT_PUBLIC_AGENT_ENGINE_URL || 'http://127.0.0.1:8787';
-const OLLAMA_URL = 'http://127.0.0.1:11434/api/generate';
+const OLLAMA_URL = (process.env.OLLAMA_URL || 'http://127.0.0.1:11434') + '/api/generate';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
 
 // ── Evergreen fallback sets per niche (mirrors hashtag.py) ──────────────────

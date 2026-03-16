@@ -146,7 +146,7 @@ export default function Home() {
         if (!Array.isArray(infs) || !infs.length) { setOutput(prev => ({ ...prev, [action]: '⚠ Create a model first.' })); return; }
         const target = infs[0];
         try {
-          const res = await fetch(`${window.location.protocol}//${window.location.hostname}:8787/agents/video-burst`, {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_AGENT_ENGINE_URL || `${window.location.protocol}//${window.location.hostname}:8787`}/agents/video-burst`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

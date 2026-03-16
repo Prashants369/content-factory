@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # logs
 *.log
@@ -47,3 +48,13 @@ __pycache__/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated assets (large binary files)
+/public/generated/
+/public/outputs/
+/public/sounds/
+/data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite

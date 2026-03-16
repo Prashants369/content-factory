@@ -135,7 +135,7 @@ function SetupScreen({ onStart }: { onStart: (cfg: SetupConfig) => void }) {
 
     useEffect(() => {
         // try to fetch local ollama models, ignore if CORS fails
-        fetch('http://127.0.0.1:11434/api/tags')
+        fetch((process.env.NEXT_PUBLIC_OLLAMA_URL || 'http://127.0.0.1:11434') + '/api/tags')
             .then(res => { if (!res.ok) throw new Error(); return res.json(); })
             .then(data => data?.models && setOllamaModels(data.models.map((m: any) => m.name)))
             .catch(() => { });

@@ -26,7 +26,7 @@ export function useAgentTelemetry() {
             try {
                 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                 const hostname = window.location.hostname || 'localhost';
-                const port = '8787';
+                const port = process.env.NEXT_PUBLIC_AGENT_ENGINE_PORT || '8787';
                 const wsUrl = `${protocol}//${hostname}:${port}/ws/telemetry`;
 
                 try {

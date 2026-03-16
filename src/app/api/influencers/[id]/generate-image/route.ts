@@ -11,7 +11,7 @@ import {
     type ContentLevel,
 } from '@/lib/characterDNA';
 
-const COMFY_URL = 'http://127.0.0.1:8188';
+const COMFY_URL = process.env.COMFYUI_URL || 'http://127.0.0.1:8188';
 const OUTPUT_DIR = path.join(process.cwd(), 'public', 'generated');
 if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 

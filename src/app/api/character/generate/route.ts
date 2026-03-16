@@ -102,7 +102,7 @@ JSON STRUCTURE:
         let aiData: any = null;
 
         try {
-            const ollamaRes = await fetch('http://127.0.0.1:11434/api/generate', {
+            const ollamaRes = await fetch((process.env.OLLAMA_URL || 'http://127.0.0.1:11434') + '/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -32,7 +32,7 @@ export default function StudioPage() {
     if (!selectedInfluencer) return;
     setIsGenerating(true);
     try {
-      const res = await fetch('http://127.0.0.1:8787/agents/video-burst', {
+      const res = await fetch((process.env.NEXT_PUBLIC_AGENT_ENGINE_URL || 'http://127.0.0.1:8787') + '/agents/video-burst', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

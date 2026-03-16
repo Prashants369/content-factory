@@ -101,9 +101,9 @@ export default function WorkflowsPage() {
     const [n8nStatus, setN8nStatus] = useState<ServiceStatus>({ online: false, loading: true });
     const [ollamaStatus, setOllamaStatus] = useState<ServiceStatus>({ online: false, loading: true });
 
-    const [comfyUrl, setComfyUrl] = useState('http://127.0.0.1:8188');
-    const [n8nUrl, setN8nUrl] = useState('http://localhost:5678/webhook/generate-ideas');
-    const [ollamaUrl, setOllamaUrl] = useState('http://127.0.0.1:11434');
+    const [comfyUrl, setComfyUrl] = useState(process.env.NEXT_PUBLIC_COMFYUI_URL || 'http://127.0.0.1:8188');
+    const [n8nUrl, setN8nUrl] = useState(process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/generate-ideas');
+    const [ollamaUrl, setOllamaUrl] = useState(process.env.NEXT_PUBLIC_OLLAMA_URL || 'http://127.0.0.1:11434');
 
     const [ollamaModels, setOllamaModels] = useState<OllamaModel[]>([]);
     const [selectedOllamaModel, setSelectedOllamaModel] = useState('');
@@ -336,7 +336,7 @@ export default function WorkflowsPage() {
                                             className="w-full bg-[#0d0d0d] border border-[#2a2a2a] rounded-lg px-3 py-2 text-xs text-neutral-300 outline-none font-mono" />
                                     </div>
                                     {!comfyStatus.online && (
-                                        <a href="http://127.0.0.1:8188" target="_blank" className="text-[9px] flex items-center gap-1 mt-5 px-2 py-1.5 border border-[#2a2a2a] rounded-lg text-neutral-600 hover:text-neutral-400 transition-colors whitespace-nowrap">
+                                        <a href={process.env.NEXT_PUBLIC_COMFYUI_URL || "http://127.0.0.1:8188"} target="_blank" className="text-[9px] flex items-center gap-1 mt-5 px-2 py-1.5 border border-[#2a2a2a] rounded-lg text-neutral-600 hover:text-neutral-400 transition-colors whitespace-nowrap">
                                             <ExternalLink size={9} /> Open ComfyUI
                                         </a>
                                     )}
@@ -454,7 +454,7 @@ export default function WorkflowsPage() {
                                     className="flex items-center gap-1.5 text-[10px] px-3 py-2 rounded-lg bg-amber-600/80 hover:bg-amber-500 text-white font-bold transition-colors">
                                     <Play size={9} /> Send Test Payload to n8n
                                 </button>
-                                <a href="http://localhost:5678" target="_blank"
+                                <a href={process.env.NEXT_PUBLIC_N8N_URL || "http://localhost:5678"} target="_blank"
                                     className="flex items-center gap-1.5 text-[10px] px-3 py-2 rounded-lg border border-[#2a2a2a] text-neutral-500 hover:text-neutral-300 transition-colors">
                                     <ExternalLink size={9} /> Open n8n Editor
                                 </a>

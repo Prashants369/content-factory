@@ -277,7 +277,7 @@ function WorkflowTestPanel({ influencers }: { influencers: Influencer[] }) {
     const [result, setResult] = useState<{ success: boolean; message: string; data?: any } | null>(null);
 
     useEffect(() => {
-        fetch('http://127.0.0.1:11434/api/tags')
+        fetch((process.env.NEXT_PUBLIC_OLLAMA_URL || 'http://127.0.0.1:11434') + '/api/tags')
             .then(r => r.json())
             .then(d => {
                 const names = (d.models || []).map((m: any) => m.name);
@@ -292,7 +292,7 @@ function WorkflowTestPanel({ influencers }: { influencers: Influencer[] }) {
         setResult(null);
         try {
             if (testType === 'ollama') {
-                const r = await fetch('http://127.0.0.1:11434/api/generate', {
+                const r = await fetch((process.env.NEXT_PUBLIC_OLLAMA_URL || 'http://127.0.0.1:11434') + '/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ model: selectedModel, prompt: 'Generate one viral Instagram hook about fitness in India. Return only the hook text.', stream: false, options: { num_predict: 80 } }),
@@ -302,14 +302,14 @@ function WorkflowTestPanel({ influencers }: { influencers: Influencer[] }) {
                 setResult({ success: true, message: `✓ ${selectedModel} responded`, data: d.response?.trim() });
             } else if (testType === 'comfyui') {
                 const settings = JSON.parse(localStorage.getItem('integrationSettings') || '{}');
-                const url = settings.comfyuiUrl || 'http://127.0.0.1:8188';
+                const url = settings.comfyuiUrl || process.env.NEXT_PUBLIC_COMFYUI_URL || 'http://127.0.0.1:8188';
                 const r = await fetch(`${url}/system_stats`);
                 const d = await r.json();
                 setResult({ success: true, message: '✓ ComfyUI online', data: JSON.stringify(d, null, 2).slice(0, 300) });
             } else {
                 if (!selectedInf) { setResult({ success: false, message: '⚠ Select an influencer first' }); setTesting(false); return; }
                 const settings = JSON.parse(localStorage.getItem('integrationSettings') || '{}');
-                const webhookUrl = settings.n8nWebhookUrl || 'http://localhost:5678/webhook/generate-ideas';
+                const webhookUrl = settings.n8nWebhookUrl || process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/generate-ideas';
                 const influencer = influencers.find(i => i.id === selectedInf);
                 const r = await fetch('/api/influencers/' + selectedInf + '/n8n/trigger', { method: 'POST' });
                 const d = await r.json();
@@ -398,7 +398,7 @@ export default function QueuePage() {
     useEffect(() => {
         Promise.allSettled([
             fetch('/api/influencers').then(r => r.ok ? r.json() : []),
-            fetch('http://127.0.0.1:11434/api/tags').then(r => r.ok ? r.json() : { models: [] }).catch(() => ({ models: [] }))
+            fetch((process.env.NEXT_PUBLIC_OLLAMA_URL || 'http://127.0.0.1:11434') + '/api/tags').then(r => r.ok ? r.json() : { models: [] }).catch(() => ({ models: [] }))
         ]).then(([infResult, ollamaResult]) => {
             const infData = infResult.status === 'fulfilled' ? infResult.value : [];
             const ollamaData = ollamaResult.status === 'fulfilled' ? ollamaResult.value : { models: [] };
