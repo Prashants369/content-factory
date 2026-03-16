@@ -1,0 +1,10 @@
+name = "factory-ghost-publisher"
+main = "worker.ts"
+compatibility_date = "2024-03-20"
+
+# [triggers]
+# crons = ["*/15 * * * *"]
+
+# [[kv_namespaces]]
+# binding = "POST_QUEUE"
+# id = "your_kv_namespace_id_here"

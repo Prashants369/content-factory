@@ -1,0 +1,114 @@
+{
+    "name": "2️⃣ Auto-Caption & Psy-Hook Generator",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "generate-captions",
+                "responseMode": "onReceived",
+                "options": {}
+            },
+            "id": "trigger",
+            "name": "Webhook (Content Queue Trigger)",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                100,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "modelName": "gemini-1.5-flash"
+            },
+            "id": "gemini-flash",
+            "name": "Google Gemini Flash",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                400,
+                500
+            ]
+        },
+        {
+            "parameters": {
+                "prompt": "={{ 'Take this viral post idea and generate advanced copywriting.\\n\\nPost Idea: ' + $json.body.post_idea + '\\n\\nGenerate:\\n- 1 Curiosity Hook\\n- 1 Authority Hook\\n- 1 Controversial Hook\\n- 1 Emotional Hook\\n- A highly engaging caption with a psychological trigger.\\n- 3 CTA (Call-to-Action) variations.\\n\\nReturn JSON strictly.' }}"
+            },
+            "id": "copywriter",
+            "name": "Gemini: Copywriting Engine",
+            "type": "@n8n/n8n-nodes-langchain.chainLlm",
+            "typeVersion": 1.4,
+            "position": [
+                400,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://localhost:3000/api/posts/{{ $json.body.post_id }}",
+                "method": "PATCH",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "caption",
+                            "value": "={{ JSON.parse($json.text).caption }}"
+                        },
+                        {
+                            "name": "video_hook_variations",
+                            "value": "={{ JSON.stringify({ curiosity: JSON.parse($json.text)['Curiosity Hook'], authority: JSON.parse($json.text)['Authority Hook'], controversial: JSON.parse($json.text)['Controversial Hook'] }) }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "update-db",
+            "name": "Update Post in DB",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                680,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook (Content Queue Trigger)": {
+            "main": [
+                [
+                    {
+                        "node": "Gemini: Copywriting Engine",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Google Gemini Flash": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Gemini: Copywriting Engine",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini: Copywriting Engine": {
+            "main": [
+                [
+                    {
+                        "node": "Update Post in DB",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    }
+}

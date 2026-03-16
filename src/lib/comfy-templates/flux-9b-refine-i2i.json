@@ -1,0 +1,207 @@
+{
+    "1": {
+        "inputs": {
+            "unet_name": "flux-2-klein-9b-Q4_K_M.gguf"
+        },
+        "class_type": "UnetLoaderGGUF"
+    },
+    "2": {
+        "inputs": {
+            "clip_name": "Qwen3-8B-Q4_K_M.gguf",
+            "type": "flux2"
+        },
+        "class_type": "CLIPLoaderGGUF"
+    },
+    "3": {
+        "inputs": {
+            "vae_name": "flux2-vae.safetensors"
+        },
+        "class_type": "VAELoader"
+    },
+    "4": {
+        "inputs": {
+            "clip_name": "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
+        },
+        "class_type": "CLIPVisionLoader"
+    },
+    "5": {
+        "inputs": {
+            "ipadapter_file": "ip-adapter-plus_sdxl_vit-h.safetensors"
+        },
+        "class_type": "IPAdapterModelLoader"
+    },
+    "6": {
+        "inputs": {
+            "image": "{{BASE_IMAGE}}"
+        },
+        "class_type": "LoadImage"
+    },
+    "7": {
+        "inputs": {
+            "weight": 0.8,
+            "weight_type": "linear",
+            "combine_embeds": "concat",
+            "start_at": 0.0,
+            "end_at": 1.0,
+            "embeds_scaling": "V only",
+            "model": [
+                "90",
+                0
+            ],
+            "ipadapter": [
+                "5",
+                0
+            ],
+            "image": [
+                "6",
+                0
+            ],
+            "clip_vision": [
+                "4",
+                0
+            ]
+        },
+        "class_type": "IPAdapterAdvanced"
+    },
+    "8": {
+        "inputs": {
+            "image": "{{SOURCE_IMAGE}}"
+        },
+        "class_type": "LoadImage"
+    },
+    "9": {
+        "inputs": {
+            "pixels": [
+                "8",
+                0
+            ],
+            "vae": [
+                "3",
+                0
+            ]
+        },
+        "class_type": "VAEEncode"
+    },
+    "90": {
+        "inputs": {
+            "lora_name": "{{LORA_NAME}}",
+            "strength_model": "{{LORA_STRENGTH:0.0}}",
+            "strength_clip": "{{LORA_CLIP_STRENGTH:0.0}}",
+            "model": [
+                "1",
+                0
+            ],
+            "clip": [
+                "2",
+                0
+            ]
+        },
+        "class_type": "LoraLoader"
+    },
+    "10": {
+        "inputs": {
+            "text": "{{POSITIVE_PROMPT}}",
+            "clip": [
+                "90",
+                1
+            ]
+        },
+        "class_type": "CLIPTextEncode"
+    },
+    "11": {
+        "inputs": {
+            "text": "{{NEGATIVE_PROMPT}}",
+            "clip": [
+                "90",
+                1
+            ]
+        },
+        "class_type": "CLIPTextEncode"
+    },
+    "12": {
+        "inputs": {
+            "cfg": 1.0,
+            "model": [
+                "7",
+                0
+            ],
+            "positive": [
+                "10",
+                0
+            ],
+            "negative": [
+                "11",
+                0
+            ]
+        },
+        "class_type": "CFGGuider"
+    },
+    "13": {
+        "inputs": {
+            "sampler_name": "euler"
+        },
+        "class_type": "KSamplerSelect"
+    },
+    "14": {
+        "inputs": {
+            "steps": 8,
+            "width": 1024,
+            "height": 1024
+        },
+        "class_type": "Flux2Scheduler"
+    },
+    "15": {
+        "inputs": {
+            "noise_seed": "{{SEED:0}}"
+        },
+        "class_type": "RandomNoise"
+    },
+    "20": {
+        "inputs": {
+            "noise": [
+                "15",
+                0
+            ],
+            "guider": [
+                "12",
+                0
+            ],
+            "sampler": [
+                "13",
+                0
+            ],
+            "sigmas": [
+                "14",
+                0
+            ],
+            "latent_image": [
+                "9",
+                0
+            ]
+        },
+        "class_type": "SamplerCustomAdvanced"
+    },
+    "30": {
+        "inputs": {
+            "samples": [
+                "20",
+                0
+            ],
+            "vae": [
+                "3",
+                0
+            ]
+        },
+        "class_type": "VAEDecode"
+    },
+    "100": {
+        "inputs": {
+            "filename_prefix": "Factory_Flux9B_Refine",
+            "images": [
+                "30",
+                0
+            ]
+        },
+        "class_type": "SaveImage"
+    }
+}

@@ -1,0 +1,134 @@
+{
+    "name": "3️⃣ Viral Feedback Loop & Auto-Engagement",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours",
+                            "hoursInterval": 24
+                        }
+                    ]
+                }
+            },
+            "id": "cron",
+            "name": "Trigger (Every 24h)",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1,
+            "position": [
+                100,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "https://graph.instagram.com/v16.0/me/media",
+                "authentication": "headerAuth",
+                "options": {}
+            },
+            "id": "get-stats",
+            "name": "Pull Reel Analytics",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                360,
+                300
+            ],
+            "notesInFlow": true,
+            "notes": "Connect to IG/TikTok API"
+        },
+        {
+            "parameters": {
+                "prompt": "={{ 'Analyze these analytics parameters from our recent posts: Watch time %, Saves, Shares, Comments.\\n\\nData: ' + JSON.stringify($json.data) + '\\n\\nTell me: Why did the top performing ones work better? Break this down by visual hook, pacing, and controversial topics. Output specific recommendations for the next batch of idea generation.' }}"
+            },
+            "id": "analyze-stats",
+            "name": "Gemini: Analytics Brain",
+            "type": "@n8n/n8n-nodes-langchain.chainLlm",
+            "typeVersion": 1.4,
+            "position": [
+                620,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "modelName": "gemini-1.5-pro-latest"
+            },
+            "id": "gemini-pro-stats",
+            "name": "Google Gemini Analytics",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                620,
+                500
+            ]
+        },
+        {
+            "parameters": {
+                "fromEmail": "influencer-analytics@factory.local",
+                "toEmail": "manager@factory.local",
+                "subject": "Viral Feedback Loop - Daily Report",
+                "text": "={{ $json.text }}"
+            },
+            "id": "send-email",
+            "name": "Send Analytics Report",
+            "type": "n8n-nodes-base.emailSend",
+            "typeVersion": 2,
+            "position": [
+                900,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Trigger (Every 24h)": {
+            "main": [
+                [
+                    {
+                        "node": "Pull Reel Analytics",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Pull Reel Analytics": {
+            "main": [
+                [
+                    {
+                        "node": "Gemini: Analytics Brain",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Google Gemini Analytics": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Gemini: Analytics Brain",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini: Analytics Brain": {
+            "main": [
+                [
+                    {
+                        "node": "Send Analytics Report",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    }
+}

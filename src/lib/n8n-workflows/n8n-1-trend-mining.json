@@ -1,0 +1,359 @@
+{
+    "name": "1️⃣ Trend Mining + Viral Idea Engine v2 (Google + Ollama Fallback)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "generate-ideas",
+                "responseMode": "onReceived",
+                "options": {}
+            },
+            "id": "trigger-dashboard",
+            "name": "Webhook (Dashboard Trigger)",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1.1,
+            "position": [
+                100,
+                300
+            ],
+            "notes": "Triggered from influencer profile page via /api/influencers/[id]/n8n/trigger"
+        },
+        {
+            "parameters": {
+                "url": "https://api.exa.ai/search",
+                "method": "POST",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "x-api-key",
+                            "value": "YOUR_EXA_API_KEY_HERE"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "query",
+                            "value": "={{ 'viral instagram reel trending idea 2025 ' + $json.body.niche + ' india' }}"
+                        },
+                        {
+                            "name": "numResults",
+                            "value": "8"
+                        },
+                        {
+                            "name": "useAutoprompt",
+                            "value": true
+                        },
+                        {
+                            "name": "type",
+                            "value": "auto"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "exa-trends",
+            "name": "🔍 Exa: Trend Scraper",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                340,
+                180
+            ],
+            "notes": "Searches for trending viral content in the influencer's niche"
+        },
+        {
+            "parameters": {
+                "url": "https://trends.google.com/trends/api/explore?hl=en-IN&tz=-330&req={\"comparisonItem\":[{\"keyword\":\"={{ encodeURIComponent($('Webhook (Dashboard Trigger)').item.json.body.niche) }}\",\"geo\":\"IN\",\"time\":\"now 7-d\"}],\"category\":0,\"property\":\"\"}",
+                "method": "GET",
+                "options": {}
+            },
+            "id": "google-trends",
+            "name": "📈 Google Trends India",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                340,
+                420
+            ],
+            "continueOnFail": true,
+            "notes": "Pulls trending data from Google Trends specifically for India (geo=IN)"
+        },
+        {
+            "parameters": {
+                "prompt": "={{ '🎯 VIRAL IDEA ENGINE v2 — MATHEMATICAL PRECISION MODE\\n\\nYou are the world\\'s most advanced AI viral content strategist trained on millions of viral posts.\\n\\n━━━━ INFLUENCER DNA ━━━━\\nName: ' + $('Webhook (Dashboard Trigger)').item.json.body.name + '\\nNiche: ' + $('Webhook (Dashboard Trigger)').item.json.body.niche + '\\nFull DNA: ' + JSON.stringify($('Webhook (Dashboard Trigger)').item.json.body.dna, null, 0) + '\\n\\n━━━━ TREND DATA ━━━━\\nExa Trend Results: ' + JSON.stringify(($('🔍 Exa: Trend Scraper').item.json.results || []).slice(0, 5).map(r => ({ title: r.title, url: r.url, highlights: r.highlights })), null, 0) + '\\n\\n━━━━ DNA CONSTRAINTS (MANDATORY) ━━━━\\n✅ Market: ' + ($('Webhook (Dashboard Trigger)').item.json.body.dna.viral_strategy?.market_focus || 'India') + '\\n✅ Psychological Hooks: ' + ($('Webhook (Dashboard Trigger)').item.json.body.dna.viral_strategy?.psychological_hooks || ['FOMO', 'Status']).join(', ') + '\\n✅ Pacing: ' + ($('Webhook (Dashboard Trigger)').item.json.body.dna.viral_strategy?.pacing_bpm || 120) + ' BPM (STRICT)\\n✅ Reading Level: Grade ' + ($('Webhook (Dashboard Trigger)').item.json.body.dna.viral_strategy?.reading_grade_level || 5) + ' (STRICT)\\n✅ Retention Target: ' + ($('Webhook (Dashboard Trigger)').item.json.body.dna.viral_strategy?.target_retention_curve || '3s hook → 12s build → loop') + '\\n✅ Primary Hook Style: ' + ($('Webhook (Dashboard Trigger)').item.json.body.dna.viral_strategy?.primary_hook_archetype || 'The Contrarian') + '\\n✅ CPM Target: $' + ($('Webhook (Dashboard Trigger)').item.json.body.dna.viral_strategy?.target_cpm || 10) + '/1000 views\\n✅ Platforms: ' + ($('Webhook (Dashboard Trigger)').item.json.body.dna.viral_strategy?.platform_priority || ['Instagram']).join(', ') + '\\n\\n━━━━ MATHEMATICAL REQUIREMENTS ━━━━\\n• Hook MUST create dopamine spike in exactly 0-2 seconds\\n• Caption MUST use AIDA formula: Attention → Interest → Desire → Action\\n• Music BPM MUST match or be within 10% of pacing_bpm in DNA\\n• Image composition MUST follow 1:1.618 golden ratio framing\\n• Hashtag count: exactly 8-12. Mix 30% mega(>1M), 40% mid(100K-1M), 30% niche(<100K)\\n• Engagement strategy MUST include 1 call-to-action that creates comment bait\\n\\n━━━━ OUTPUT FORMAT (JSON ARRAY ONLY) ━━━━\\nReturn ONLY a valid JSON array of 5 objects. No markdown, no explanations.\\nEach object MUST have exactly these keys:\\n[\\n  {\\n    \"viral_hook\": \"string — 8-12 words max, must trigger curiosity/FOMO/status\",\\n    \"image_prompt\": \"string — detailed Stable Diffusion/Flux prompt with character consistency & mathematical composition\",\\n    \"caption\": \"string — AIDA formula, Grade 5 reading level, 80-120 words\",\\n    \"hashtags\": \"string — 8-12 hashtags as space-separated string\",\\n    \"music_suggestion\": \"string — track style + BPM + mood\",\\n    \"engagement_strategy\": \"string — specific CTA and comment-bait technique\",\\n    \"video_hook_variations\": [\"string\", \"string\", \"string\"],\\n    \"platform\": \"instagram\",\\n    \"estimated_reach_score\": number,\\n    \"virality_score\": number\\n  }\\n]' }}\","options": {}
+            },
+            "id": "gemini-engine",
+            "name": "🧠 Gemini 2.0: Viral Script Engine",
+            "type": "@n8n/n8n-nodes-langchain.chainLlm",
+            "typeVersion": 1.4,
+            "position": [
+                620,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "modelName": "gemini-2.0-flash"
+            },
+            "id": "gemini-model",
+            "name": "Google Gemini 2.0 Flash",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                620,
+                500
+            ]
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "conditions": [
+                        {
+                            "leftValue": "={{ $json.text }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "isNotEmpty"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                }
+            },
+            "id": "check-gemini-output",
+            "name": "✅ Gemini Success?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                860,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://127.0.0.1:11434/api/generate",
+                "method": "POST",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "model",
+                            "value": "={{ $('Webhook (Dashboard Trigger)').item.json.body.ollama_model || 'gemma3:4b' }}"
+                        },
+                        {
+                            "name": "prompt",
+                            "value": "={{ 'You are a viral content expert. Generate 5 Instagram content ideas for: ' + $('Webhook (Dashboard Trigger)').item.json.body.niche + ' targeting India. DNA: ' + JSON.stringify($('Webhook (Dashboard Trigger)').item.json.body.dna.viral_strategy) + '\\n\\nReturn ONLY a JSON array. Each item: {viral_hook, image_prompt, caption, hashtags, music_suggestion, engagement_strategy, video_hook_variations(array of 3), platform: \"instagram\", virality_score}' }}"
+                        },
+                        {
+                            "name": "stream",
+                            "value": false
+                        },
+                        {
+                            "name": "options",
+                            "value": "={{ { temperature: 0.8, num_predict: 2000 } }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "ollama-fallback",
+            "name": "🦙 Ollama Fallback (Local LLM)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1100,
+                420
+            ],
+            "continueOnFail": true,
+            "notes": "Used when Gemini API is unavailable. Uses whatever local model is configured."
+        },
+        {
+            "parameters": {
+                "jsCode": "// Parse Gemini output — handle markdown code blocks\nconst raw = items[0].json.text || '';\nconst cleaned = raw.replace(/```json\\s*/gi, '').replace(/```\\s*/g, '').trim();\ntry {\n  const parsed = JSON.parse(cleaned);\n  return [{ json: { ideas: Array.isArray(parsed) ? parsed : [parsed], source: 'gemini' } }];\n} catch(e) {\n  // Try to extract JSON array from text\n  const match = cleaned.match(/\\[\\s*{[\\s\\S]*}\\s*\\]/);\n  if (match) {\n    const parsed = JSON.parse(match[0]);\n    return [{ json: { ideas: parsed, source: 'gemini' } }];\n  }\n  return [{ json: { ideas: [], error: e.message, raw: cleaned.slice(0, 500), source: 'gemini' } }];\n}"
+            },
+            "id": "parse-gemini",
+            "name": "🔄 Parse Gemini JSON",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1100,
+                200
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// Parse Ollama output\nconst raw = items[0].json.response || '';\nconst cleaned = raw.replace(/```json\\s*/gi, '').replace(/```\\s*/g, '').trim();\ntry {\n  const parsed = JSON.parse(cleaned);\n  return [{ json: { ideas: Array.isArray(parsed) ? parsed : [parsed], source: 'ollama' } }];\n} catch(e) {\n  const match = cleaned.match(/\\[\\s*{[\\s\\S]*}\\s*\\]/);\n  if (match) {\n    return [{ json: { ideas: JSON.parse(match[0]), source: 'ollama' } }];\n  }\n  return [{ json: { ideas: [], error: 'Both Gemini and Ollama failed: ' + e.message, source: 'ollama' } }];\n}"
+            },
+            "id": "parse-ollama",
+            "name": "🔄 Parse Ollama JSON",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1340,
+                420
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://localhost:3000/api/webhooks/n8n/receive-ideas",
+                "method": "POST",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "influencer_id",
+                            "value": "={{ $('Webhook (Dashboard Trigger)').item.json.body.influencer_id }}"
+                        },
+                        {
+                            "name": "ideas",
+                            "value": "={{ $json.ideas }}"
+                        },
+                        {
+                            "name": "source",
+                            "value": "={{ $json.source }}"
+                        }
+                    ]
+                },
+                "options": {},
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                }
+            },
+            "id": "send-to-dashboard",
+            "name": "💾 Save Ideas to Dashboard",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1580,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook (Dashboard Trigger)": {
+            "main": [
+                [
+                    {
+                        "node": "🔍 Exa: Trend Scraper",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "📈 Google Trends India",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "🔍 Exa: Trend Scraper": {
+            "main": [
+                [
+                    {
+                        "node": "🧠 Gemini 2.0: Viral Script Engine",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "🧠 Gemini 2.0: Viral Script Engine": {
+            "main": [
+                [
+                    {
+                        "node": "✅ Gemini Success?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Google Gemini 2.0 Flash": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "🧠 Gemini 2.0: Viral Script Engine",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "✅ Gemini Success?": {
+            "main": [
+                [
+                    {
+                        "node": "🔄 Parse Gemini JSON",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "🦙 Ollama Fallback (Local LLM)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "🔄 Parse Gemini JSON": {
+            "main": [
+                [
+                    {
+                        "node": "💾 Save Ideas to Dashboard",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "🦙 Ollama Fallback (Local LLM)": {
+            "main": [
+                [
+                    {
+                        "node": "🔄 Parse Ollama JSON",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "🔄 Parse Ollama JSON": {
+            "main": [
+                [
+                    {
+                        "node": "💾 Save Ideas to Dashboard",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "_upgrade_notes": {
+        "changes": [
+            "Upgraded to Gemini 2.0 Flash (faster, cheaper)",
+            "Added Ollama local LLM fallback when Gemini fails",
+            "Added robust JSON parsing with markdown code block stripping",
+            "Added Google Trends India integration (geo=IN)",
+            "Added hashtags, platform, virality_score, estimated_reach_score to output",
+            "AIDA formula enforced in caption prompt",
+            "Golden ratio + mathematical composition added to image_prompt",
+            "Gemini API retry logic via fallback node"
+        ]
+    }
+}

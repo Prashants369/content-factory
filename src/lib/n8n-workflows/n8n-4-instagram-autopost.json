@@ -1,0 +1,399 @@
+{
+    "name": "4️⃣ Instagram Auto-Post Engine",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "minutes",
+                            "minutesInterval": 30
+                        }
+                    ]
+                }
+            },
+            "id": "cron-trigger",
+            "name": "⏰ Check Every 30 Min",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.1,
+            "position": [
+                100,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://localhost:3000/api/posts/ready-to-post",
+                "method": "GET",
+                "options": {}
+            },
+            "id": "fetch-ready-posts",
+            "name": "📋 Fetch Ready Posts",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                340,
+                300
+            ],
+            "notes": "Gets all posts with status=Ready, autopost_enabled=1, scheduled_at <= now"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict"
+                    },
+                    "conditions": [
+                        {
+                            "leftValue": "={{ $json.posts.length }}",
+                            "rightValue": 0,
+                            "operator": {
+                                "type": "number",
+                                "operation": "gt"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                }
+            },
+            "id": "has-posts-check",
+            "name": "✅ Has Posts to Publish?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                580,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "posts",
+                "options": {}
+            },
+            "id": "split-posts",
+            "name": "🔀 Split Into Individual Posts",
+            "type": "n8n-nodes-base.splitOut",
+            "typeVersion": 1,
+            "position": [
+                820,
+                200
+            ]
+        },
+        {
+            "parameters": {
+                "url": "=http://localhost:3000{{ $json.media_path }}",
+                "method": "GET",
+                "responseFormat": "file",
+                "options": {}
+            },
+            "id": "download-image",
+            "name": "⬇️ Download Image from Dashboard",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1060,
+                200
+            ],
+            "notes": "Downloads the generated image from the local dashboard server"
+        },
+        {
+            "parameters": {
+                "url": "=https://graph.facebook.com/v19.0/{{ $('🔀 Split Into Individual Posts').item.json.ig_business_account_id }}/media",
+                "method": "POST",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "image_url",
+                            "value": "={{ $('🔀 Split Into Individual Posts').item.json.public_image_url }}"
+                        },
+                        {
+                            "name": "caption",
+                            "value": "={{ $('🔀 Split Into Individual Posts').item.json.caption + '\\n\\n' + ($('🔀 Split Into Individual Posts').item.json.hashtags || '#aiinfluencer #contentcreator #viral #trending') }}"
+                        },
+                        {
+                            "name": "access_token",
+                            "value": "={{ $('🔀 Split Into Individual Posts').item.json.ig_access_token }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "ig-create-container",
+            "name": "📦 IG: Create Media Container",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1300,
+                200
+            ],
+            "notes": "Step 1: Upload media to Instagram as a container"
+        },
+        {
+            "parameters": {
+                "amount": 10,
+                "unit": "seconds"
+            },
+            "id": "wait-for-ig",
+            "name": "⏳ Wait 10s (IG Processing)",
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.1,
+            "position": [
+                1540,
+                200
+            ]
+        },
+        {
+            "parameters": {
+                "url": "=https://graph.facebook.com/v19.0/{{ $('🔀 Split Into Individual Posts').item.json.ig_business_account_id }}/media_publish",
+                "method": "POST",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "creation_id",
+                            "value": "={{ $('📦 IG: Create Media Container').item.json.id }}"
+                        },
+                        {
+                            "name": "access_token",
+                            "value": "={{ $('🔀 Split Into Individual Posts').item.json.ig_access_token }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "ig-publish",
+            "name": "🚀 IG: Publish Post",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1780,
+                200
+            ],
+            "notes": "Step 2: Publishes the container as a live Instagram post"
+        },
+        {
+            "parameters": {
+                "url": "=https://graph.facebook.com/v19.0/{{ $json.id }}?fields=permalink,timestamp,like_count,comments_count,reach,impressions&access_token={{ $('🔀 Split Into Individual Posts').item.json.ig_access_token }}",
+                "method": "GET",
+                "options": {}
+            },
+            "id": "fetch-post-details",
+            "name": "📊 Fetch IG Post Details",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                2020,
+                200
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://localhost:3000/api/posts/mark-posted",
+                "method": "POST",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "post_id",
+                            "value": "={{ $('🔀 Split Into Individual Posts').item.json.id }}"
+                        },
+                        {
+                            "name": "ig_post_id",
+                            "value": "={{ $('📊 Fetch IG Post Details').item.json.id }}"
+                        },
+                        {
+                            "name": "ig_permalink",
+                            "value": "={{ $('📊 Fetch IG Post Details').item.json.permalink }}"
+                        },
+                        {
+                            "name": "ig_likes",
+                            "value": "={{ $('📊 Fetch IG Post Details').item.json.like_count || 0 }}"
+                        },
+                        {
+                            "name": "ig_comments",
+                            "value": "={{ $('📊 Fetch IG Post Details').item.json.comments_count || 0 }}"
+                        },
+                        {
+                            "name": "posted_at",
+                            "value": "={{ $now.toISO() }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "update-dashboard-db",
+            "name": "💾 Update Dashboard DB",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                2260,
+                200
+            ],
+            "notes": "Marks post as 'Posted' and saves IG post ID + permalink for analytics"
+        },
+        {
+            "parameters": {
+                "url": "http://localhost:3000/api/posts/sync-analytics",
+                "method": "POST",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "post_id",
+                            "value": "={{ $('🔀 Split Into Individual Posts').item.json.id }}"
+                        },
+                        {
+                            "name": "influencer_id",
+                            "value": "={{ $('🔀 Split Into Individual Posts').item.json.influencer_id }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "trigger-analytics-sync",
+            "name": "📈 Trigger Analytics Sync",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                2500,
+                200
+            ],
+            "notes": "Queues an analytics pull 24h after posting"
+        }
+    ],
+    "connections": {
+        "⏰ Check Every 30 Min": {
+            "main": [
+                [
+                    {
+                        "node": "📋 Fetch Ready Posts",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "📋 Fetch Ready Posts": {
+            "main": [
+                [
+                    {
+                        "node": "✅ Has Posts to Publish?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "✅ Has Posts to Publish?": {
+            "main": [
+                [
+                    {
+                        "node": "🔀 Split Into Individual Posts",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                []
+            ]
+        },
+        "🔀 Split Into Individual Posts": {
+            "main": [
+                [
+                    {
+                        "node": "⬇️ Download Image from Dashboard",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "⬇️ Download Image from Dashboard": {
+            "main": [
+                [
+                    {
+                        "node": "📦 IG: Create Media Container",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "📦 IG: Create Media Container": {
+            "main": [
+                [
+                    {
+                        "node": "⏳ Wait 10s (IG Processing)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "⏳ Wait 10s (IG Processing)": {
+            "main": [
+                [
+                    {
+                        "node": "🚀 IG: Publish Post",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "🚀 IG: Publish Post": {
+            "main": [
+                [
+                    {
+                        "node": "📊 Fetch IG Post Details",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "📊 Fetch IG Post Details": {
+            "main": [
+                [
+                    {
+                        "node": "💾 Update Dashboard DB",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "💾 Update Dashboard DB": {
+            "main": [
+                [
+                    {
+                        "node": "📈 Trigger Analytics Sync",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "_setup_notes": {
+        "step1": "In n8n Credentials, add your Instagram/Facebook OAuth2 token",
+        "step2": "Go to /workflows in your dashboard, enter your IG Business Account ID per influencer",
+        "step3": "In the Content Pipeline, set posts to 'autopost_enabled = true' and schedule them",
+        "step4": "Activate this workflow — it checks every 30 minutes for scheduled ready posts",
+        "required_apis": [
+            "Instagram Graph API (Meta Business Suite)",
+            "Facebook Developer App with instagram_basic + instagram_content_publish permissions"
+        ],
+        "webhook_endpoints": [
+            "POST /api/posts/ready-to-post",
+            "POST /api/posts/mark-posted",
+            "POST /api/posts/sync-analytics"
+        ]
+    }
+}

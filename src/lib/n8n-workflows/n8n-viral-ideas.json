@@ -1,0 +1,126 @@
+{
+    "name": "Viral Content Ideas Generator",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "generate-ideas",
+                "responseMode": "onReceived",
+                "options": {}
+            },
+            "id": "1",
+            "name": "Webhook (Trigger)",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1.1,
+            "position": [
+                100,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "model": "gemini-1.5-flash",
+                "options": {
+                    "systemMessage": "You are a world-class viral content strategist. You are given an AI Influencer's DNA. Your goal is to generate 5 highly viral, engaging content ideas for their social media. Return the result strictly as a JSON array of objects, each with 'viral_hook', 'image_prompt' (a detailed prompt for an image generator), and 'caption'."
+                }
+            },
+            "id": "2",
+            "name": "Google Gemini Model",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                400,
+                450
+            ]
+        },
+        {
+            "parameters": {
+                "prompt": "={{ $json.body.dna ? JSON.stringify($json.body.dna) : 'Focus on niche: ' + $json.body.niche }}\nGenerate 5 ideas."
+            },
+            "id": "3",
+            "name": "Generate Ideas (Basic LLM Chain)",
+            "type": "@n8n/n8n-nodes-langchain.chainLlm",
+            "typeVersion": 1.4,
+            "position": [
+                400,
+                300
+            ],
+            "inputs": [
+                "main"
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://localhost:3000/api/webhooks/n8n/receive-ideas",
+                "method": "POST",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "influencer_id",
+                            "value": "={{ $('Webhook (Trigger)').item.json.body.influencer_id }}"
+                        },
+                        {
+                            "name": "ideas",
+                            "value": "={{ JSON.parse($json.text) }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "4",
+            "name": "Send back to Dashboard",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                800,
+                300
+            ]
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "Webhook (Trigger)": {
+            "main": [
+                [
+                    {
+                        "node": "Generate Ideas (Basic LLM Chain)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Google Gemini Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Generate Ideas (Basic LLM Chain)",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Generate Ideas (Basic LLM Chain)": {
+            "main": [
+                [
+                    {
+                        "node": "Send back to Dashboard",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "68571fa7-6c39-4cd9-abbb-a4e9b97b0a31",
+    "meta": {
+        "templateCredsSetupCompleted": true
+    },
+    "tags": []
+}

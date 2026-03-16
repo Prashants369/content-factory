@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # Python Agent Engine (FastAPI)
+  api:
+    build:
+      context: ./agent_engine
+    container_name: ai-factory-api
+    ports:
+      - "8787:8787"
+    volumes:
+      - ./agent_engine:/app
+      - ./data:/app/data
+      - c:/ComfyUI_windows_portable:/comfyui_root # Mount local ComfyUI for image sharing
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - COMFYUI_URL=http://host.docker.internal:8188
+      - CORS_ORIGINS=http://localhost:3000
+      - INTERNAL_API_KEY=ai_factory_secret_2026
+    depends_on:
+      - redis
+    networks:
+      - ai_factory_net
+
+  # Redis for job queueing and rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: ai-factory-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ai_factory_net
+
+  # n8n for automation workflows
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: ai-factory-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=n8n
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://n8n:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - ai_factory_net
+
+  # Background Worker for AI Tasks
+  worker:
+    build:
+      context: ./agent_engine
+    container_name: ai-factory-worker
+    command: python worker.py
+    volumes:
+      - ./agent_engine:/app
+      - ./data:/app/data
+      - c:/ComfyUI_windows_portable:/comfyui_root
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - COMFYUI_URL=http://host.docker.internal:8188
+      - INTERNAL_API_KEY=ai_factory_secret_2026
+    networks:
+      - ai_factory_net
+
+networks:
+  ai_factory_net:
+    driver: bridge
+
+volumes:
+  redis_data:
+  n8n_data:
